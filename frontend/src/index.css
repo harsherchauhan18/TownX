@@ -1,3 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* Stranger Things Theme Variables */
+  :root {
+    --st-red: #ed1b24;
+    --st-neon-red: #ff0000;
+    --st-dark-bg: #0a0a0a;
+    --st-dark-secondary: #1a1a1a;
+    --st-brown-dark: #2e2a29;
+    --st-brown-medium: #8c4f4f;
+    --st-copper: #d68f66;
+    --st-light: #f9f1e6;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--st-dark-bg);
+    color: var(--st-light);
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--st-dark-bg);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--st-red);
+    border-radius: 5px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--st-neon-red);
+  }
+}
+
+@layer utilities {
+  /* Neon Glow Effects */
+  .neon-red {
+    color: var(--st-neon-red);
+    text-shadow: 
+      0 0 5px var(--st-neon-red),
+      0 0 10px var(--st-neon-red),
+      0 0 20px var(--st-neon-red),
+      0 0 40px var(--st-red);
+  }
+
+  .neon-glow-red {
+    box-shadow: 
+      0 0 5px var(--st-neon-red),
+      0 0 10px var(--st-neon-red),
+      0 0 20px var(--st-red);
+  }
+
+  /* Flickering Animation */
+  @keyframes flicker {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+      opacity: 1;
+      text-shadow: 
+        0 0 5px var(--st-neon-red),
+        0 0 10px var(--st-neon-red),
+        0 0 20px var(--st-neon-red),
+        0 0 40px var(--st-red);
+    }
+    20%, 24%, 55% {
+      opacity: 0.4;
+      text-shadow: none;
+    }
+  }
+
+  .flicker {
+    animation: flicker 3s infinite;
+  }
+
+  /* Subtle Glitch Effect */
+  @keyframes glitch {
+    0% {
+      transform: translate(0);
+    }
+    20% {
+      transform: translate(-2px, 2px);
+    }
+    40% {
+      transform: translate(-2px, -2px);
+    }
+    60% {
+      transform: translate(2px, 2px);
+    }
+    80% {
+      transform: translate(2px, -2px);
+    }
+    100% {
+      transform: translate(0);
+    }
+  }
+
+  .glitch {
+    animation: glitch 0.3s infinite;
+  }
+
+  /* Retro Title Font */
+  .retro-title {
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* Ambient Red Glow Background */
+  .ambient-red-glow {
+    background: radial-gradient(circle at center, rgba(237, 27, 36, 0.15) 0%, transparent 70%);
+  }
+}
