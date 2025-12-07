@@ -10,7 +10,7 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-purple-900 to-black flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-black via-red-800 to-black flex items-center justify-center">
         <div className="text-white text-2xl font-semibold">Loading...</div>
       </div>
     )

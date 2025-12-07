@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../src/context/AuthContext";
-
+import Balatro from './Balatro';
 // AuthForm component moved outside to prevent re-creation on every render
 const AuthForm = ({ type, email, setEmail, password, setPassword, handleSubmit, isLoading }) => (
   <div className="flex flex-col gap-5">
@@ -92,7 +92,15 @@ const LoginSignup = () => {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated Background */}
+      {/* Animated Background with Balatro */}
+      <div className="absolute inset-0 opacity-30">
+        <Balatro
+          isRotate={false}
+          mouseInteraction={true}
+          pixelFilter={700}
+        />
+      </div>
+      
       <div className="absolute inset-0 opacity-20">
         <div className="absolute top-0 left-0 w-96 h-96 bg-red-600 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-red-700 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
@@ -117,13 +125,13 @@ const LoginSignup = () => {
                 <div className="w-full h-full bg-gradient-to-br from-gray-800 via-black to-gray-800 border-2 border-red-600 border-opacity-30 rounded-3xl p-8 shadow-2xl shadow-red-600/20">
                   <div className="text-center mb-8">
                     <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-red-600 to-red-700 flex items-center justify-center shadow-lg shadow-red-600/50 animate-spin" style={{ animationDuration: '20s' }}>
-                      <span className="text-4xl font-bold text-white">⚡</span>
+                      <span className="text-4xl font-bold text-white">X</span>
                     </div>
-                    <h2 className="text-4xl font-black neon-red mb-2 retro-title">
-                      Hawkins Lab Access
+                    <h2 className="text-4xl font-white neon-red mb-4 retro-title">
+                      Welcome to TownX
                     </h2>
                     <p className="text-red-400 text-opacity-70 text-sm">
-                      Enter the Lab
+                      Enter the Hub
                     </p>
                   </div>
 
@@ -181,13 +189,13 @@ const LoginSignup = () => {
                 <div className="w-full h-full bg-gradient-to-br from-gray-800 via-black to-gray-800 border-2 border-red-600 border-opacity-30 rounded-3xl p-8 shadow-2xl shadow-red-600/20">
                   <div className="text-center mb-8">
                     <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-red-600 to-red-700 flex items-center justify-center shadow-lg shadow-red-600/50 animate-spin" style={{ animationDuration: '20s', animationDirection: 'reverse' }}>
-                      <span className="text-4xl font-bold text-white">⚡</span>
+                      <span className="text-4xl font-bold text-white">X</span>
                     </div>
-                    <h2 className="text-4xl font-black neon-red mb-2 retro-title">
-                      Join the Team
+                    <h2 className="text-4xl font-white neon-red mb-2 retro-title">
+                      Join TownX
                     </h2>
                     <p className="text-red-400 text-opacity-70 text-sm">
-                      Join the Party and investigate
+                      Join the Town
                     </p>
                   </div>
 
@@ -212,7 +220,7 @@ const LoginSignup = () => {
                   {isSignUp && (
                     <div className="mt-6 text-center">
                       <p className="text-red-400 text-opacity-50 text-sm mb-3">
-                        Already in the Party?
+                        Already in Town?
                       </p>
                       <button
                         onClick={handleFlip}
@@ -225,13 +233,6 @@ const LoginSignup = () => {
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Power Rangers Tagline */}
-          <div className="text-center mt-8 animate-fadeIn">
-            <p className="text-red-400 text-opacity-50 text-sm font-semibold tracking-widest">
-              STRANGER THINGS ⚡
-            </p>
           </div>
         </div>
       ) : (

@@ -1,12 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, Zap, Shield, Menu, Plus } from "lucide-react";
+import { Send, Sparkles, Zap, Menu } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import Balatro from "./Balatro";
+import Sidebar from "../src/components/Sidebar";
 
-const StrangerThingsHome = () => {
+const HomePage = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const messagesEndRef = useRef(null);
+  const navigate = useNavigate();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -61,7 +65,15 @@ const StrangerThingsHome = () => {
 
   return (
     <div className="flex h-screen bg-black text-white overflow-hidden">
-      {/* Animated Background */}
+      {/* Animated Background with Balatro */}
+      <div className="absolute inset-0 opacity-20">
+        <Balatro
+          isRotate={false}
+          mouseInteraction={true}
+          pixelFilter={700}
+        />
+      </div>
+      
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-0 left-0 w-96 h-96 bg-red-600 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-red-700 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
@@ -69,62 +81,14 @@ const StrangerThingsHome = () => {
       </div>
 
       {/* Sidebar */}
-      <div 
-        className={`relative z-10 bg-gray-900 bg-opacity-80 backdrop-blur-sm border-r border-red-600 border-opacity-20 transition-all duration-300 ${
-          sidebarOpen ? 'w-64' : 'w-0'
-        } overflow-hidden`}
-      >
-        <div className="p-4 flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-red-600 to-red-700 flex items-center justify-center shadow-lg shadow-red-600/50">
-              <Zap className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-xl font-bold neon-red retro-title">Hawkins Lab</span>
-          </div>
-
-          {/* New Chat Button */}
-          <button
-            onClick={() => {
-              setMessages([]);
-              setInput("");
-            }}
-            className="w-full mb-6 px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-lg flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform shadow-lg shadow-red-600/30"
-          >
-            <Plus className="w-5 h-5" />
-            New Investigation
-          </button>
-
-          {/* Conversations */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="text-xs text-red-500 text-opacity-50 mb-2 font-semibold">RECENT INVESTIGATIONS</div>
-            <div className="space-y-2">
-              {conversations.map((conv, i) => (
-                <div
-                  key={i}
-                  className="p-3 rounded-lg bg-black bg-opacity-40 border border-red-600 border-opacity-20 cursor-pointer hover:bg-opacity-60 transition-all"
-                >
-                  <div className="text-sm text-red-400 font-medium truncate">{conv.title}</div>
-                  <div className="text-xs text-red-500 text-opacity-50 mt-1">{conv.time}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* User Profile */}
-          <div className="pt-4 border-t border-red-600 border-opacity-20">
-            <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-black hover:bg-opacity-40 cursor-pointer transition-all">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-red-700 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1">
-                <div className="text-sm font-semibold text-red-400">Party Member</div>
-                <div className="text-xs text-red-500 text-opacity-50">Active Status</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Sidebar 
+        sidebarOpen={sidebarOpen}
+        conversations={conversations}
+        onNewChat={() => {
+          setMessages([]);
+          setInput("");
+        }}
+      />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col relative z-10">
@@ -151,14 +115,11 @@ const StrangerThingsHome = () => {
                 <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-red-600 to-red-700 flex items-center justify-center shadow-2xl shadow-red-600/50 animate-spin" style={{ animationDuration: '20s' }}>
                   <Sparkles className="w-12 h-12 text-white" />
                 </div>
-                <h2 className="text-5xl font-black neon-red mb-4 retro-title flicker">
-                  WELCOME TO HAWKINS
+                <h2 className="text-5xl font-white neon-red mb-4 retro-title flicker">
+                  WELCOME TO Town X
                 </h2>
                 <p className="text-xl text-red-400 text-opacity-70 mb-2">
                   Strange things are happening...
-                </p>
-                <p className="text-sm text-red-500 text-opacity-50">
-                  Your AI-powered investigator is ready to help
                 </p>
               </div>
 
@@ -179,29 +140,7 @@ const StrangerThingsHome = () => {
               </div>
 
               {/* Features */}
-              <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center p-4">
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-lg bg-red-600 bg-opacity-20 flex items-center justify-center">
-                    <Zap className="w-6 h-6 text-red-400" />
-                  </div>
-                  <div className="text-sm font-semibold text-red-400 mb-1">Lightning Fast</div>
-                  <div className="text-xs text-red-500 text-opacity-50">Instant responses from the Upside Down</div>
-                </div>
-                <div className="text-center p-4">
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-lg bg-red-600 bg-opacity-20 flex items-center justify-center">
-                    <Shield className="w-6 h-6 text-red-400" />
-                  </div>
-                  <div className="text-sm font-semibold text-red-400 mb-1">Secure & Private</div>
-                  <div className="text-xs text-red-500 text-opacity-50">Your secrets are safe with us</div>
-                </div>
-                <div className="text-center p-4">
-                  <div className="w-12 h-12 mx-auto mb-3 rounded-lg bg-red-600 bg-opacity-20 flex items-center justify-center">
-                    <Sparkles className="w-6 h-6 text-red-400" />
-                  </div>
-                  <div className="text-sm font-semibold text-red-400 mb-1">Always Learning</div>
-                  <div className="text-xs text-red-500 text-opacity-50">Evolving with every mystery</div>
-                </div>
-              </div>
+              
             </div>
           ) : (
             <div className="max-w-3xl mx-auto space-y-6">
@@ -298,4 +237,4 @@ const StrangerThingsHome = () => {
   );
 };
 
-export default StrangerThingsHome;
+export default HomePage;
