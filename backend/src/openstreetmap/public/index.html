@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nearby Places Finder - Leaflet Map</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Leaflet Routing Machine CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+      flex-direction: row-reverse;  /* Map on right, sidebar on left */
+    }
+
+    .sidebar {
+      width: 30%;  /* Reduced from 350px to 30% */
+      background: white;
+      box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+      overflow-y: auto;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .map-container {
+      width: 70%;  /* Increased from remaining to 70% */
+      height: 100vh;
+      position: relative;
+    }
+
+    .sidebar h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+    .category-section {
+      margin: 10px 0;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .category-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 10px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+      transition: all 0.3s;
+    }
+
+    .category-header:hover {
+      opacity: 0.9;
+    }
+
+    .category-toggle {
+      font-size: 14px;
+      transition: transform 0.3s;
+    }
+
+    .category-toggle.open {
+      transform: rotate(180deg);
+    }
+
+    .category-items {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+      background: #f9f9f9;
+    }
+
+    .category-items.open {
+      max-height: 300px;
+      border-top: 1px solid #ddd;
+    }
+
+    .category-item {
+      padding: 8px 12px;
+      border-bottom: 1px solid #eee;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .category-item:last-child {
+      border-bottom: none;
+    }
+
+    .category-item:hover {
+      background: #f0f7ff;
+      padding-left: 16px;
+    }
+
+    .category-item-icon {
+      margin-right: 6px;
+      font-weight: bold;
+    }
+
+    .category-item-name {
+      flex: 1;
+    }
+
+    .category-item-count {
+      color: #999;
+      font-size: 11px;
+      margin-left: 5px;
+    }
+
+    .control-group {
+      margin-bottom: 8px;
+    }
+
+    .control-group label {
+      display: block;
+      margin-bottom: 4px;
+      color: #333;
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    .control-group input,
+    .control-group select {
+      width: 100%;
+      padding: 6px;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      font-size: 12px;
+      transition: border-color 0.3s;
+    }
+
+    .control-group input:focus,
+    .control-group select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-search {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-search:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-search:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-clear {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .btn-clear:hover {
+      background: #e0e0e0;
+    }
+
+    .status-message {
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .status-message.info {
+      background: #e3f2fd;
+      color: #1565c0;
+      display: block;
+    }
+
+    .status-message.success {
+      background: #e8f5e9;
+      color: #2e7d32;
+      display: block;
+    }
+
+    .status-message.error {
+      background: #ffebee;
+      color: #c62828;
+      display: block;
+    }
+
+    .places-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .place-item {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .place-item:hover {
+      background: #f0f0f0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transform: translateX(5px);
+    }
+
+    .all-results-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.98);
+      border: 2px solid #667eea;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 600px;
+      width: 90vw;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      z-index: 10000;
+      backdrop-filter: blur(5px);
+    }
+
+    .all-results-modal h2 {
+      color: #667eea;
+      margin-bottom: 16px;
+      font-size: 20px;
+    }
+
+    .all-results-modal .result-item {
+      padding: 12px;
+      border-bottom: 1px solid #e0e0e0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .all-results-modal .result-item:hover {
+      background: #f5f5f5;
+    }
+
+    .all-results-modal .result-info {
+      flex: 1;
+    }
+
+    .all-results-modal .result-name {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .all-results-modal .result-distance {
+      font-size: 12px;
+      color: #999;
+    }
+
+    .all-results-modal .result-status {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      margin-left: 8px;
+    }
+
+    .all-results-modal .result-status.in-radius {
+      background: #c8e6c9;
+      color: #2e7d32;
+    }
+
+    .all-results-modal .result-status.out-radius {
+      background: #ffccbc;
+      color: #d84315;
+    }
+
+    .all-results-modal .close-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .all-results-modal .close-btn:hover {
+      background: #c0392b;
+    }
+
+    .place-item h3 {
+      color: #667eea;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    .place-item p {
+      color: #666;
+      font-size: 12px;
+      margin: 3px 0;
+    }
+
+    .map-container {
+      flex: 1;
+      position: relative;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    .loading {
+      display: none;
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+    }
+
+    .loading.active {
+      display: block;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .suggestion-chip {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+      white-space: nowrap;
+    }
+
+    .suggestion-chip:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    }
+
+    .saved-indicator {
+      color: #f39c12;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .saved-indicator.saved {
+      color: #f39c12;
+      transform: scale(1.2);
+    }
+
+    .rating-stars {
+      display: inline-flex;
+      gap: 3px;
+      margin-left: 5px;
+    }
+
+    .rating-star {
+      cursor: pointer;
+      color: #ddd;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    .rating-star.active,
+    .rating-star:hover {
+      color: #f39c12;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        height: auto;
+        max-height: 40vh;
+      }
+
+      .map-container {
+        height: 60vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <h1>🗺️ Place Finder (Nominatim)</h1>
+
+      <div class="status-message" id="statusMessage"></div>
+
+      <div class="control-group">
+        <label for="searchQuery">Search for Places:</label>
+        <input 
+          type="text" 
+          id="searchQuery" 
+          placeholder="e.g., Restaurants, Hospitals, Cafes..."
+          onkeypress="if(event.key === 'Enter') searchNearbyPlaces()"
+        >
+      </div>
+
+      <!-- Suggestions Section -->
+      <div id="suggestionsContainer" style="display: none; margin-bottom: 15px;">
+        <label style="font-size: 12px; color: #666; margin-bottom: 5px; display: block;">💡 Suggestions for you:</label>
+        <div id="suggestionsList" style="display: flex; flex-wrap: wrap; gap: 5px;"></div>
+      </div>
+
+      <!-- Preference filter (simple keywords) -->
+      <div class="control-group">
+        <label for="preferenceFilter">✨ Preference keywords:</label>
+        <input type="text" id="preferenceFilter" placeholder="e.g., chinese, wifi, vegan" style="width: 100%;">
+        <small style="color: #666; font-size: 11px;">We’ll prioritize matching places automatically after search.</small>
+      </div>
+
+      <div class="control-group">
+        <label for="searchRadius">Search Radius (km):</label>
+        <input type="number" id="searchRadius" value="10" min="0.5" max="50" step="0.5">
+      </div>
+
+      <div class="control-group">
+        <label for="resultLimit">Max Results:</label>
+        <input type="number" id="resultLimit" value="15" min="1" max="50" step="1">
+      </div>
+
+      <div class="button-group">
+        <button class="btn-search" id="searchBtn" onclick="searchNearbyPlaces()">🔍 Search</button>
+        <button class="btn-clear" id="clearBtn" onclick="clearMarkers()">🗑️ Clear</button>
+      </div>
+
+      <div class="control-group">
+        <label>Your Location:</label>
+        <input type="text" id="locationDisplay" readonly placeholder="Click map or use Search">
+      </div>
+
+      <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+
+      <!-- Saved Places Tab -->
+      <div style="margin-bottom: 10px;">
+        <button id="showFoundBtn" onclick="toggleView('found')" style="padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 4px 0 0 4px; cursor: pointer; font-size: 12px;">Found Places</button>
+        <button id="showSavedBtn" onclick="toggleView('saved')" style="padding: 6px 12px; background: #ddd; color: #666; border: none; border-radius: 0 4px 4px 0; cursor: pointer; font-size: 12px;">Saved Places</button>
+      </div>
+
+      <h3 id="foundTitle" style="color: #333; margin-bottom: 10px;">Found Places</h3>
+      <h3 id="savedTitle" style="color: #333; margin-bottom: 10px; display: none;">⭐ Saved Places</h3>
+      
+      <div id="routeInfo" style="display: none; background: #f0f7ff; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 12px;">
+        <p><b>📍 Route Selected:</b> <span id="routeDestination"></span></p>
+        <p><b>📏 Distance:</b> <span id="routeDistance"></span> km</p>
+        <p><b>⏱️ Duration:</b> <span id="routeDuration"></span></p>
+        <button onclick="clearRoute()" style="width: 100%; padding: 6px; margin-top: 8px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Clear Route</button>
+      </div>
+      
+      <div class="places-list" id="placesList"></div>
+      <div class="places-list" id="savedPlacesList" style="display: none;"></div>
+    </div>
+
+    <!-- Map Container -->
+    <div class="map-container">
+      <div id="map"></div>
+      <div class="loading" id="loading">
+        <span class="spinner"></span> Loading...
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Leaflet Routing Machine JS -->
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
+  <script>
+    // Initialize map
+    const map = L.map('map').setView([28.6139, 77.2090], 13);
+
+    // Add tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Store markers and user location
+    let userMarker = null;
+    let placeMarkers = [];
+    let currentLocation = null;
+    let routingControl = null;
+    let selectedDestination = null;
+    let currentUserId = 'default_user';
+    let savedPlaces = [];
+    let currentView = 'found'; // 'found' or 'saved'
+
+    // Map click handler for location selection
+    map.on('click', async (e) => {
+      const { lat, lng } = e.latlng;
+      addUserMarker(lat, lng);
+      
+      // Reverse geocode the clicked location
+      try {
+        const response = await fetch('/api/reverse-geocode', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ latitude: lat, longitude: lng })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          document.getElementById('locationDisplay').value = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        }
+      } catch (err) {
+        console.error('Reverse geocode error:', err);
+      }
+    });
+
+    // Get current location using browser geolocation
+    function getUserLocation() {
+      return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+          reject(new Error("Geolocation not supported"));
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            resolve({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            });
+          },
+          (error) => {
+            reject(new Error(`Geolocation error: ${error.message}`));
+          }
+        );
+      });
+    }
+
+    // Add user marker to map
+    function addUserMarker(latitude, longitude) {
+      if (userMarker) {
+        userMarker.setLatLng([latitude, longitude]);
+      } else {
+        userMarker = L.circleMarker([latitude, longitude], {
+          radius: 10,
+          fillColor: "#667eea",
+          color: "#fff",
+          weight: 3,
+          opacity: 1,
+          fillOpacity: 0.8
+        }).addTo(map);
+
+        userMarker.bindPopup("<b>📍 Your Location</b><br><small>Click map to move this marker</small>");
+      }
+
+      currentLocation = { latitude, longitude };
+      map.setView([latitude, longitude], 14);
+      
+      // Load suggestions and saved places when location is set
+      loadSuggestions();
+      loadSavedPlaces();
+    }
+
+    // Create custom marker icon based on category
+    function createMarkerIcon(category) {
+      const colors = {
+        amenity: "#e74c3c",
+        restaurant: "#f39c12",
+        cafe: "#d4a574",
+        shop: "#9b59b6",
+        bank: "#3498db",
+        pharmacy: "#2ecc71",
+        police: "#34495e",
+        school: "#1abc9c",
+        hotel: "#e91e63",
+        parking: "#95a5a6",
+        default: "#667eea"
+      };
+
+      const color = colors[category] || colors.default;
+
+      return L.divIcon({
+        html: `
+          <div style="
+            background-color: ${color};
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 3px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            font-size: 16px;
+          ">📍</div>
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32],
+        popupAnchor: [0, -32]
+      });
+    }
+
+    // Clear all place markers
+    function clearMarkers() {
+      placeMarkers.forEach(marker => map.removeLayer(marker));
+      placeMarkers = [];
+      document.getElementById('placesList').innerHTML = '';
+      showStatus('Markers cleared', 'info');
+    }
+
+    // Toggle advanced filters panel
+    function toggleAdvancedFilters() {
+      const panel = document.getElementById('advancedFiltersPanel');
+      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Store last search results for lightweight preference filtering
+    let currentPlaces = [];
+
+    function applyPreferenceFilter(places, preferenceText) {
+      const pref = (preferenceText || '').toLowerCase().trim();
+      if (!pref) return places;
+      const tokens = pref.split(/[,\s]+/).filter(Boolean);
+      if (tokens.length === 0) return places;
+      return places.filter(p => {
+        const hay = (
+          (p.name || '') + ' ' + (p.type || '') + ' ' + (p.category || '') + ' ' +
+          Object.values(p.extratags || {}).join(' ')
+        ).toLowerCase();
+        return tokens.every(t => hay.includes(t));
+      });
+    }
+
+    // Category mapping with icons
+    const categoryConfig = {
+      'hospital': { icon: '🏥', name: 'Hospitals', color: '#e74c3c' },
+      'doctor': { icon: '👨‍⚕️', name: 'Doctors', color: '#e74c3c' },
+      'clinic': { icon: '🏥', name: 'Clinics', color: '#e74c3c' },
+      'pharmacy': { icon: '💊', name: 'Pharmacies', color: '#e74c3c' },
+      'restaurant': { icon: '🍽️', name: 'Restaurants', color: '#f39c12' },
+      'cafe': { icon: '☕', name: 'Cafes', color: '#d68910' },
+      'bar': { icon: '🍷', name: 'Bars', color: '#d68910' },
+      'pub': { icon: '🍺', name: 'Pubs', color: '#d68910' },
+      'food': { icon: '🍽️', name: 'Dining', color: '#f39c12' },
+      'fast_food': { icon: '🍔', name: 'Fast Food', color: '#f39c12' },
+      'supermarket': { icon: '🛒', name: 'Essentials', color: '#16a085' },
+      'grocery': { icon: '🛒', name: 'Essentials', color: '#16a085' },
+      'convenience': { icon: '🏪', name: 'Essentials', color: '#16a085' },
+      'shop': { icon: '🏪', name: 'Essentials', color: '#16a085' },
+      'school': { icon: '🎓', name: 'Schools', color: '#3498db' },
+      'college': { icon: '🎓', name: 'Schools', color: '#3498db' },
+      'university': { icon: '🎓', name: 'Schools', color: '#3498db' }
+    };
+
+    // Categorize places into main groups
+    function categorizePlace(place) {
+      const category = (place.category || '').toLowerCase();
+      const type = (place.type || '').toLowerCase();
+      
+      // Map to main category groups
+      if (category.includes('hospital') || type.includes('hospital') || category.includes('clinic') || type.includes('clinic') || category.includes('doctor') || category.includes('pharmacy')) {
+        return 'hospital';
+      } else if (category.includes('restaurant') || type.includes('restaurant')) {
+        return 'restaurant';
+      } else if (category.includes('cafe') || type.includes('cafe') || type.includes('coffee')) {
+        return 'cafe';
+      } else if (category.includes('food') || type.includes('fast_food') || category.includes('fast_food') || type.includes('bar') || type.includes('pub')) {
+        return 'food';
+      } else if (category.includes('supermarket') || type.includes('supermarket') || category.includes('shop') || category.includes('convenience') || category.includes('grocery')) {
+        return 'essentials';
+      } else if (category.includes('school') || type.includes('school') || category.includes('college') || type.includes('university')) {
+        return 'school';
+      }
+      return category || 'other';
+    }
+
+    // Display places organized by category with collapsible sections
+    function displayPlacesByCategory(places) {
+      const placesList = document.getElementById('placesList');
+      placesList.innerHTML = '';
+
+      // Group places by category
+      const groupedPlaces = {};
+      places.forEach(place => {
+        const mainCategory = categorizePlace(place);
+        if (!groupedPlaces[mainCategory]) {
+          groupedPlaces[mainCategory] = [];
+        }
+        groupedPlaces[mainCategory].push(place);
+      });
+
+      // Define category order
+      const categoryOrder = ['hospital', 'restaurant', 'cafe', 'food', 'essentials', 'school'];
+      
+      // Display each category section
+      categoryOrder.forEach(catKey => {
+        if (!groupedPlaces[catKey] || groupedPlaces[catKey].length === 0) return;
+
+        const config = categoryConfig[catKey] || { icon: '📍', name: catKey.charAt(0).toUpperCase() + catKey.slice(1), color: '#667eea' };
+        const categoryPlaces = groupedPlaces[catKey];
+
+        // Create category section
+        const categorySection = document.createElement('div');
+        categorySection.className = 'category-section';
+        categorySection.dataset.category = catKey;
+
+        // Create category header
+        const categoryHeader = document.createElement('div');
+        categoryHeader.className = 'category-header';
+        categoryHeader.style.cursor = 'pointer';
+        categoryHeader.innerHTML = `
+          <span style="font-weight: bold;">
+            <span class="category-icon">${config.icon}</span>
+            <span class="category-name">${config.name}</span>
+            <span class="category-count" style="font-size: 11px; font-weight: normal; margin-left: 5px;">(${categoryPlaces.length})</span>
+          </span>
+          <span class="category-toggle open">▼</span>
+        `;
+
+        // Create items container
+        const itemsContainer = document.createElement('div');
+        itemsContainer.className = 'category-items open';
+
+        // Add places to category
+        categoryPlaces.forEach((place, idx) => {
+          const item = document.createElement('div');
+          item.className = 'category-item';
+          
+          const addressInfo = place.address ? 
+            `${place.address.road || place.address.suburb || place.address.city || 'No street info'}` : 
+            'Address not available';
+          
+          const isSaved = savedPlaces.some(p => p.id === place.id);
+          const savedBadge = place.isSaved ? '<span style="display: inline-block; background: #f39c12; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-right: 4px; font-weight: 600;">⭐ Saved</span>' : '';
+          const feedbackBadges = `
+            ${place.positiveFeedbacks > 0 ? `<span style="display: inline-block; background: #2ecc71; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-right: 4px; font-weight: 600;">👍 ${place.positiveFeedbacks}</span>` : ''}
+            ${place.negativeFeedbacks > 0 ? `<span style="display: inline-block; background: #e74c3c; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-right: 4px; font-weight: 600;">👎 ${place.negativeFeedbacks}</span>` : ''}
+          `;
+
+          item.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 6px;">
+              <div style="flex: 1;">
+                <p style="margin: 0; font-weight: 600; color: #333; font-size: 13px;">${idx + 1}. ${place.name}</p>
+                <p style="margin: 3px 0; font-size: 11px; color: #666;">${place.type || place.category} • <b>${place.distance.toFixed(2)} km</b></p>
+                <p style="margin: 3px 0; font-size: 11px; color: #999;">${addressInfo}</p>
+                <div style="margin-top: 4px;">${savedBadge}${feedbackBadges}</div>
+                <div class="review-summary" data-place-id="${place.id}" style="margin-top: 4px; font-size: 11px; color: #333;"></div>
+              </div>
+              <span class="saved-indicator ${isSaved ? 'saved' : ''}" onclick="event.stopPropagation(); savePlace({id: '${place.id}', name: '${place.name.replace(/'/g, "\\'")}', category: '${place.category}', type: '${place.type || ''}', latitude: ${place.latitude}, longitude: ${place.longitude}})" title="${isSaved ? 'Saved' : 'Save'}" style="font-size: 16px; cursor: pointer;">${isSaved ? '⭐' : '☆'}</span>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;">
+              <button onclick="showRoute({name: '${place.name.replace(/'/g, "\\'")}', latitude: ${place.latitude}, longitude: ${place.longitude}})" style="flex: 1; padding: 6px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">Route</button>
+              <button onclick="event.stopPropagation(); showLLMDetails({id: '${place.id}', name: '${place.name.replace(/'/g, "\\'\\'")}', category: '${place.category}', type: '${(place.type || '').replace(/'/g, "\\'\\'")}', latitude: ${place.latitude}, longitude: ${place.longitude}, distance: ${place.distance}})" style="padding: 6px 8px; background: #f39c12; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Show Details">🧠 Details</button>
+              <button onclick="event.stopPropagation(); openReviewModal({id: '${place.id}', name: '${place.name.replace(/'/g, "\\'")}', category: '${place.category}'})" style="padding: 6px 8px; background: #1abc9c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Add Review">⭐ Review</button>
+              <button onclick="event.stopPropagation(); giveFeedback({id: '${place.id}', name: '${place.name.replace(/'/g, "\\'")}', category: '${place.category}'}, true)" style="padding: 6px 8px; background: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Good">👍</button>
+              <button onclick="event.stopPropagation(); giveFeedback({id: '${place.id}', name: '${place.name.replace(/'/g, "\\'")}', category: '${place.category}'}, false)" style="padding: 6px 8px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Bad">👎</button>
+            </div>
+          `;
+
+          const reviewSummaryEl = item.querySelector(`.review-summary[data-place-id="${place.id}"]`);
+          loadReviewSummary(place.id, reviewSummaryEl);
+
+          item.addEventListener('click', (e) => {
+            if (!e.target.closest('button') && !e.target.closest('.saved-indicator')) {
+              if (place.marker) {
+                place.marker.openPopup();
+                map.setView([place.latitude, place.longitude], 16);
+              }
+            }
+          });
+
+          itemsContainer.appendChild(item);
+        });
+
+        // Toggle functionality
+        categoryHeader.addEventListener('click', () => {
+          itemsContainer.classList.toggle('open');
+          categoryHeader.querySelector('.category-toggle').classList.toggle('open');
+        });
+
+        categorySection.appendChild(categoryHeader);
+        categorySection.appendChild(itemsContainer);
+        placesList.appendChild(categorySection);
+      });
+
+      // Display any remaining places not in main categories
+      const otherPlaces = Object.keys(groupedPlaces)
+        .filter(key => !categoryOrder.includes(key))
+        .reduce((acc, key) => [...acc, ...groupedPlaces[key]], []);
+
+      if (otherPlaces.length > 0) {
+        const categorySection = document.createElement('div');
+        categorySection.className = 'category-section';
+        categorySection.dataset.category = 'other';
+
+        const categoryHeader = document.createElement('div');
+        categoryHeader.className = 'category-header';
+        categoryHeader.style.cursor = 'pointer';
+        categoryHeader.innerHTML = `
+          <span style="font-weight: bold;">
+            <span class="category-icon">📍</span>
+            <span class="category-name">Other Places</span>
+            <span class="category-count" style="font-size: 11px; font-weight: normal; margin-left: 5px;">(${otherPlaces.length})</span>
+          </span>
+          <span class="category-toggle open">▼</span>
+        `;
+
+        const itemsContainer = document.createElement('div');
+        itemsContainer.className = 'category-items open';
+
+        otherPlaces.forEach((place, idx) => {
+          const item = document.createElement('div');
+          item.className = 'category-item';
+          
+          const addressInfo = place.address ? 
+            `${place.address.road || place.address.suburb || place.address.city || 'No street info'}` : 
+            'Address not available';
+          
+          const isSaved = savedPlaces.some(p => p.id === place.id);
+          const savedBadge = place.isSaved ? '<span style="display: inline-block; background: #f39c12; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-right: 4px; font-weight: 600;">⭐ Saved</span>' : '';
+          const feedbackBadges = `
+            ${place.positiveFeedbacks > 0 ? `<span style="display: inline-block; background: #2ecc71; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-right: 4px; font-weight: 600;">👍 ${place.positiveFeedbacks}</span>` : ''}
+            ${place.negativeFeedbacks > 0 ? `<span style="display: inline-block; background: #e74c3c; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; margin-right: 4px; font-weight: 600;">👎 ${place.negativeFeedbacks}</span>` : ''}
+          `;
+
+          item.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 6px;">
+              <div style="flex: 1;">
+                <p style="margin: 0; font-weight: 600; color: #333; font-size: 13px;">${idx + 1}. ${place.name}</p>
+                <p style="margin: 3px 0; font-size: 11px; color: #666;">${place.type || place.category} • <b>${place.distance.toFixed(2)} km</b></p>
+                <p style="margin: 3px 0; font-size: 11px; color: #999;">${addressInfo}</p>
+                <div style="margin-top: 4px;">${savedBadge}${feedbackBadges}</div>
+                <div class="review-summary" data-place-id="${place.id}" style="margin-top: 4px; font-size: 11px; color: #333;"></div>
+              </div>
+              <span class="saved-indicator ${isSaved ? 'saved' : ''}" onclick="event.stopPropagation(); savePlace({id: '${place.id}', name: '${place.name.replace(/'/g, "\\'")}', category: '${place.category}', type: '${place.type || ''}', latitude: ${place.latitude}, longitude: ${place.longitude}})" title="${isSaved ? 'Saved' : 'Save'}" style="font-size: 16px; cursor: pointer;">${isSaved ? '⭐' : '☆'}</span>
+            </div>
+            <div style="display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;">
+              <button onclick="showRoute({name: '${place.name.replace(/'/g, "\\'")}', latitude: ${place.latitude}, longitude: ${place.longitude}})" style="flex: 1; padding: 6px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;">Route</button>
+              <button onclick="event.stopPropagation(); showLLMDetails({id: '${place.id}', name: '${place.name.replace(/'/g, "\\'\\'")}', category: '${place.category}', type: '${(place.type || '').replace(/'/g, "\\'\\'")}', latitude: ${place.latitude}, longitude: ${place.longitude}, distance: ${place.distance}})" style="padding: 6px 8px; background: #f39c12; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Show Details">🧠 Details</button>
+              <button onclick="event.stopPropagation(); openReviewModal({id: '${place.id}', name: '${place.name.replace(/'/g, "\\'")}', category: '${place.category}'})" style="padding: 6px 8px; background: #1abc9c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Add Review">⭐ Review</button>
+              <button onclick="event.stopPropagation(); giveFeedback({id: '${place.id}', name: '${place.name.replace(/'/g, "\\'")}', category: '${place.category}'}, true)" style="padding: 6px 8px; background: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Good">👍</button>
+              <button onclick="event.stopPropagation(); giveFeedback({id: '${place.id}', name: '${place.name.replace(/'/g, "\\'")}', category: '${place.category}'}, false)" style="padding: 6px 8px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;" title="Bad">👎</button>
+            </div>
+          `;
+
+          const reviewSummaryEl = item.querySelector(`.review-summary[data-place-id="${place.id}"]`);
+          loadReviewSummary(place.id, reviewSummaryEl);
+
+          item.addEventListener('click', (e) => {
+            if (!e.target.closest('button') && !e.target.closest('.saved-indicator')) {
+              if (place.marker) {
+                place.marker.openPopup();
+                map.setView([place.latitude, place.longitude], 16);
+              }
+            }
+          });
+
+          itemsContainer.appendChild(item);
+        });
+
+        categoryHeader.addEventListener('click', () => {
+          itemsContainer.classList.toggle('open');
+          categoryHeader.querySelector('.category-toggle').classList.toggle('open');
+        });
+
+        categorySection.appendChild(categoryHeader);
+        categorySection.appendChild(itemsContainer);
+        placesList.appendChild(categorySection);
+      }
+    }
+
+    // Show LLM details modal
+    async function showLLMDetails(place) {
+      // place is now a direct object, no need to parse
+      setLoading(true);
+      try {
+        const response = await fetch('/api/location-details', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ location: place })
+        });
+        const data = await response.json();
+        setLoading(false);
+        if (data && (data.success !== false)) {
+          showLLMModal(place.name, data.details || data);
+        } else {
+          showLLMModal(place.name, 'No details found or LLM unavailable.');
+        }
+      } catch (err) {
+        setLoading(false);
+        showLLMModal(place.name, 'Error fetching details: ' + err.message);
+      }
+    }
+
+    // Modal for LLM details
+    function showLLMModal(title, details) {
+      let modal = document.getElementById('llmDetailsModal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'llmDetailsModal';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100vw';
+        modal.style.height = '100vh';
+        modal.style.background = 'transparent';
+        modal.style.display = 'flex';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+        modal.style.zIndex = '10001';
+        modal.style.pointerEvents = 'none';
+        modal.innerHTML = `
+          <div style="background: white; padding: 24px 20px 16px 20px; border-radius: 10px; max-width: 480px; width: 90vw; box-shadow: 0 4px 24px rgba(0,0,0,0.18); position: relative; pointer-events: all;">
+            <button id="closeLLMModal" style="position: absolute; top: 8px; right: 12px; background: #e74c3c; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; font-size: 18px; cursor: pointer;">&times;</button>
+            <h2 style="margin-top: 0; color: #667eea; font-size: 18px;">🧠 ${title}</h2>
+            <div id="llmDetailsContent" style="margin-top: 12px; font-size: 14px; color: #333; white-space: pre-line; max-height: 400px; overflow-y: auto;"></div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+        document.getElementById('closeLLMModal').onclick = () => {
+          modal.style.display = 'none';
+        };
+      } else {
+        modal.style.display = 'flex';
+      }
+      document.getElementById('llmDetailsContent').textContent = typeof details === 'string' ? details : (details.description || JSON.stringify(details, null, 2));
+    }
+
+    // Show all results in transparent modal
+    function showAllResultsModal(allPlaces, searchRadius, searchQuery) {
+      let modal = document.getElementById('allResultsModal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'allResultsModal';
+        modal.className = 'all-results-modal';
+        document.body.appendChild(modal);
+      }
+
+      const inRadius = allPlaces.filter(p => p.distance <= searchRadius);
+      const outRadius = allPlaces.filter(p => p.distance > searchRadius);
+
+      let html = `
+        <button class="close-btn" onclick="document.getElementById('allResultsModal').style.display='none';">&times;</button>
+        <h2>🔍 All Results for "${searchQuery}"</h2>
+        <p style="color: #666; font-size: 14px; margin-bottom: 16px;">
+          Total: <b>${allPlaces.length}</b> | Within ${searchRadius}km: <b style="color: #2e7d32;">${inRadius.length}</b> | Outside: <b style="color: #d84315;">${outRadius.length}</b>
+        </p>
+      `;
+
+      // Show places within radius first
+      if (inRadius.length > 0) {
+        html += `<div style="margin-bottom: 16px;"><h3 style="color: #2e7d32; font-size: 14px; margin-bottom: 8px;">✓ Within ${searchRadius}km (${inRadius.length})</h3>`;
+        inRadius.forEach((place, idx) => {
+          html += `
+            <div class="result-item">
+              <div class="result-info" style="flex: 1; cursor: pointer;" onclick="map.setView([${place.latitude}, ${place.longitude}], 16);">
+                <div class="result-name">${idx + 1}. ${place.name}</div>
+                <div class="result-distance">${place.category} • ${place.distance.toFixed(2)} km</div>
+                <div class="result-review" data-review-place="${place.id}" style="font-size: 11px; color: #333; margin-top: 2px;"></div>
+              </div>
+              <div style="display: flex; gap: 6px; margin-left: 8px; flex-wrap: wrap; align-items: center;">
+                <button onclick="showRoute({name: '${place.name.replace(/'/g, "\\'")}', latitude: ${place.latitude}, longitude: ${place.longitude}})" style="padding: 6px 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;" title="Get Route">📍</button>
+                <button onclick="showLLMDetails({id: '${place.id}', name: '${place.name.replace(/'/g, "\\'\\'")}', category: '${place.category}', type: '${(place.type || '').replace(/'/g, "\\'\\'")}', latitude: ${place.latitude}, longitude: ${place.longitude}, distance: ${place.distance}})" style="padding: 6px 10px; background: #f39c12; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;" title="Get Details">🧠</button>
+                <button onclick="event.stopPropagation(); openReviewModal({id: '${place.id}', name: '${place.name.replace(/'/g, "\\'")}', category: '${place.category}'})" style="padding: 6px 10px; background: #1abc9c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;" title="Add Review">⭐</button>
+                <button onclick="event.stopPropagation(); giveFeedback({id: '${place.id}', name: '${place.name.replace(/'/g, "\\'")}', category: '${place.category}'}, true)" style="padding: 6px 10px; background: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;" title="Good">👍</button>
+                <button onclick="event.stopPropagation(); giveFeedback({id: '${place.id}', name: '${place.name.replace(/'/g, "\\'")}', category: '${place.category}'}, false)" style="padding: 6px 10px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;" title="Bad">👎</button>
+              </div>
+              <span class="result-status in-radius">✓ In Range</span>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      }
+
+      // Show places outside radius
+      if (outRadius.length > 0) {
+        html += `<div><h3 style="color: #d84315; font-size: 14px; margin-bottom: 8px;">✗ Outside ${searchRadius}km (${outRadius.length})</h3>`;
+        outRadius.forEach((place, idx) => {
+          html += `
+            <div class="result-item">
+              <div class="result-info" style="flex: 1; cursor: pointer;" onclick="map.setView([${place.latitude}, ${place.longitude}], 16);">
+                <div class="result-name">${inRadius.length + idx + 1}. ${place.name}</div>
+                <div class="result-distance">${place.category} • ${place.distance.toFixed(2)} km</div>
+                <div class="result-review" data-review-place="${place.id}" style="font-size: 11px; color: #333; margin-top: 2px;"></div>
+              </div>
+              <div style="display: flex; gap: 6px; margin-left: 8px; flex-wrap: wrap; align-items: center;">
+                <button onclick="showRoute({name: '${place.name.replace(/'/g, "\\'")}', latitude: ${place.latitude}, longitude: ${place.longitude}})" style="padding: 6px 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;" title="Get Route">📍</button>
+                <button onclick="showLLMDetails({id: '${place.id}', name: '${place.name.replace(/'/g, "\\'\\'")}', category: '${place.category}', type: '${(place.type || '').replace(/'/g, "\\'\\'")}', latitude: ${place.latitude}, longitude: ${place.longitude}, distance: ${place.distance}})" style="padding: 6px 10px; background: #f39c12; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;" title="Get Details">🧠</button>
+                <button onclick="event.stopPropagation(); openReviewModal({id: '${place.id}', name: '${place.name.replace(/'/g, "\\'")}', category: '${place.category}'})" style="padding: 6px 10px; background: #1abc9c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;" title="Add Review">⭐</button>
+                <button onclick="event.stopPropagation(); giveFeedback({id: '${place.id}', name: '${place.name.replace(/'/g, "\\'")}', category: '${place.category}'}, true)" style="padding: 6px 10px; background: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;" title="Good">👍</button>
+                <button onclick="event.stopPropagation(); giveFeedback({id: '${place.id}', name: '${place.name.replace(/'/g, "\\'")}', category: '${place.category}'}, false)" style="padding: 6px 10px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;" title="Bad">👎</button>
+              </div>
+              <span class="result-status out-radius">✗ Too Far</span>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      }
+
+      modal.innerHTML = html;
+      modal.style.display = 'block';
+
+      // Populate review summaries
+      modal.querySelectorAll('[data-review-place]').forEach(el => {
+        const pid = el.getAttribute('data-review-place');
+        loadReviewSummary(pid, el);
+      });
+    }
+
+    // Show route on map
+    function showRoute(destinationPlace) {
+      if (!currentLocation) {
+        showStatus('Please set a location first', 'error');
+        return;
+      }
+
+      // Close the all-results modal to show the route
+      const allResultsModal = document.getElementById('allResultsModal');
+      if (allResultsModal) {
+        allResultsModal.style.display = 'none';
+      }
+
+      // Check if Leaflet Routing Machine is loaded
+      if (typeof L === 'undefined' || !L.Routing || !L.Routing.control) {
+        showStatus('Routing library is loading... Please try again in a moment', 'error');
+        console.error('L.Routing is not available. L:', typeof L, 'L.Routing:', typeof L?.Routing);
+        return;
+      }
+
+      // Remove existing route
+      if (routingControl) {
+        map.removeControl(routingControl);
+      }
+
+      selectedDestination = destinationPlace;
+
+      try {
+        // Create routing control
+        routingControl = L.Routing.control({
+          waypoints: [
+            L.latLng(currentLocation.latitude, currentLocation.longitude),
+            L.latLng(destinationPlace.latitude, destinationPlace.longitude)
+          ],
+          routeWhileDragging: true,
+          showAlternatives: true,
+          lineOptions: {
+            styles: [
+              { color: '#667eea', opacity: 0.8, weight: 5 }
+            ]
+          },
+          createMarker: function() {
+            return null; // Don't create markers, we have our own
+          }
+        }).addTo(map);
+
+        // Listen for route found
+        routingControl.on('routesfound', function(e) {
+          if (!e.routes || e.routes.length === 0) {
+            showStatus('No route found', 'error');
+            return;
+          }
+
+          const route = e.routes[0];
+          const distance = (route.summary.totalDistance / 1000).toFixed(2);
+          const duration = (route.summary.totalTime / 60).toFixed(0);
+
+          document.getElementById('routeDestination').textContent = destinationPlace.name;
+          document.getElementById('routeDistance').textContent = distance;
+          document.getElementById('routeDuration').textContent = `${duration} mins`;
+          document.getElementById('routeInfo').style.display = 'block';
+
+          showStatus(`Route found: ${distance}km, ${duration} mins`, 'success');
+        });
+
+        // Handle routing errors
+        routingControl.on('routingerror', function(e) {
+          console.error('Routing error:', e);
+          showStatus('Could not calculate route. Try again.', 'error');
+        });
+
+      } catch (err) {
+        console.error('Error showing route:', err);
+        showStatus(`Error showing route: ${err.message}`, 'error');
+      }
+    }
+
+    // Clear route
+    function clearRoute() {
+      if (routingControl) {
+        map.removeControl(routingControl);
+        routingControl = null;
+      }
+      selectedDestination = null;
+      document.getElementById('routeInfo').style.display = 'none';
+      showStatus('Route cleared', 'info');
+    }
+
+    // Display status message
+    function showStatus(message, type = 'info') {
+      const statusEl = document.getElementById('statusMessage');
+      statusEl.textContent = message;
+      statusEl.className = `status-message ${type}`;
+      setTimeout(() => {
+        statusEl.className = 'status-message';
+      }, 5000);
+    }
+
+    // Show loading spinner
+    function setLoading(isLoading) {
+      const loadingEl = document.getElementById('loading');
+      if (isLoading) {
+        loadingEl.classList.add('active');
+      } else {
+        loadingEl.classList.remove('active');
+      }
+    }
+
+    // Calculate distance between two coordinates (in km)
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371; // Earth's radius in km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    // ========== SUGGESTION & TRENDING SYSTEM FUNCTIONS ==========
+
+    // Load trending searches instead of personalized suggestions
+    async function loadSuggestions() {
+      try {
+        const response = await fetch('/api/trending-searches?limit=6', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        const data = await response.json();
+        if (data.success && data.trending && data.trending.length > 0) {
+          displaySuggestions(data.trending);
+        }
+      } catch (err) {
+        console.error('Failed to load trending searches:', err);
+      }
+    }
+
+    // Display trending chips
+    function displaySuggestions(trending) {
+      const container = document.getElementById('suggestionsContainer');
+      const listEl = document.getElementById('suggestionsList');
+      
+      listEl.innerHTML = '';
+      
+      trending.forEach(trend => {
+        const chip = document.createElement('button');
+        chip.className = 'suggestion-chip';
+        chip.textContent = `🔥 ${trend.query} (${trend.count})`;
+        chip.title = `Searched ${trend.count} times`;
+        chip.onclick = () => {
+          document.getElementById('searchQuery').value = trend.query;
+          searchNearbyPlaces();
+        };
+        listEl.appendChild(chip);
+      });
+      
+      container.style.display = 'block';
+    }
+
+    // Save place to favorites
+    async function savePlace(place) {
+      try {
+        console.log('[SAVE] Saving place:', place);
+        const response = await fetch('/api/save-place', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: currentUserId,
+            place: place
+          })
+        });
+
+        const data = await response.json();
+        console.log('[SAVE] Response:', data);
+        
+        if (data.success) {
+          savedPlaces = data.savedPlaces;
+          showStatus(`✅ Saved ${place.name} to favorites!`, 'success');
+          loadSuggestions(); // Refresh suggestions
+          
+          // Update the star icon in the current view
+          const starIcons = document.querySelectorAll('.saved-indicator');
+          starIcons.forEach(icon => {
+            const onclick = icon.getAttribute('onclick');
+            if (onclick && onclick.includes(`id: '${place.id}'`)) {
+              icon.textContent = '⭐';
+              icon.classList.add('saved');
+              icon.title = 'Saved to favorites';
+            }
+          });
+          
+          return true;
+        } else {
+          showStatus(`Failed to save: ${data.error}`, 'error');
+        }
+      } catch (err) {
+        console.error('Failed to save place:', err);
+        showStatus('Failed to save place', 'error');
+      }
+      return false;
+    }
+
+    // Remove place from favorites
+    async function unsavePlace(placeId) {
+      try {
+        console.log('[UNSAVE] Removing place:', placeId);
+        
+        // Remove from local array
+        savedPlaces = savedPlaces.filter(p => p.id !== placeId);
+        
+        // Update the JSON file via API
+        const response = await fetch('/api/unsave-place', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: currentUserId,
+            placeId: placeId
+          })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          showStatus('Removed from favorites', 'success');
+          loadSavedPlaces();
+          loadSuggestions();
+        }
+      } catch (err) {
+        console.error('Failed to unsave place:', err);
+        showStatus('Failed to remove place', 'error');
+      }
+    }
+
+    // Rate a place
+    async function ratePlace(placeId, score) {
+      try {
+        await fetch('/api/rate-place', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: currentUserId,
+            placeId: placeId,
+            score: score
+          })
+        });
+        loadSuggestions(); // Refresh suggestions based on rating
+      } catch (err) {
+        console.error('Failed to rate place:', err);
+      }
+    }
+
+    // Track search query
+    async function trackSearch(query) {
+      try {
+        await fetch('/api/track-search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: currentUserId,
+            query: query
+          })
+        });
+      } catch (err) {
+        console.error('Failed to track search:', err);
+      }
+    }
+
+    // ========== FEEDBACK SYSTEM ==========
+
+    // Give thumbs up/down feedback for a place
+    async function giveFeedback(place, isPositive) {
+      try {
+        const response = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: currentUserId,
+            placeId: place.id,
+            placeName: place.name,
+            category: place.category,
+            feedbackType: isPositive ? 'positive' : 'negative',
+            timestamp: new Date().toISOString()
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          showStatus(isPositive ? '👍 Thanks for your feedback!' : '👎 Feedback recorded', 'success');
+          
+          // Auto-adjust category weight
+          if (!isPositive) {
+            // If negative, maybe ask why
+            showFeedbackDialog(place);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to submit feedback:', err);
+      }
+    }
+
+    // Show feedback dialog for detailed input
+    function showFeedbackDialog(place) {
+      const reasons = [
+        'Place is closed',
+        'Wrong location',
+        'Not relevant to search',
+        'Poor quality',
+        'Other'
+      ];
+
+      const reasonsList = reasons.map((r, i) => 
+        `<label style="display: block; margin: 5px 0;"><input type="radio" name="reason" value="${r}"> ${r}</label>`
+      ).join('');
+
+      const dialog = document.createElement('div');
+      dialog.style.cssText = 'position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); z-index: 10000; max-width: 400px;';
+      
+      dialog.innerHTML = `
+        <h3 style="margin: 0 0 15px 0; color: #333;">Why didn't you like ${place.name}?</h3>
+        <form id="feedbackForm">
+          ${reasonsList}
+          <textarea id="feedbackComment" placeholder="Additional comments (optional)" style="width: 100%; margin-top: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit;"></textarea>
+          <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button type="submit" style="flex: 1; padding: 8px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Submit</button>
+            <button type="button" onclick="this.closest('div').parentElement.parentElement.remove()" style="flex: 1; padding: 8px; background: #ddd; color: #666; border: none; border-radius: 5px; cursor: pointer;">Skip</button>
+          </div>
+        </form>
+      `;
+
+      document.body.appendChild(dialog);
+
+      dialog.querySelector('#feedbackForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const reason = dialog.querySelector('input[name="reason"]:checked')?.value;
+        const comment = dialog.querySelector('#feedbackComment').value;
+
+        if (reason) {
+          await submitDetailedFeedback(place, reason, comment);
+        }
+        dialog.remove();
+      };
+    }
+
+    // Submit detailed feedback
+    async function submitDetailedFeedback(place, reason, comment) {
+      try {
+        await fetch('/api/detailed-feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: currentUserId,
+            placeId: place.id,
+            placeName: place.name,
+            category: place.category,
+            reason: reason,
+            comment: comment,
+            timestamp: new Date().toISOString()
+          })
+        });
+
+        showStatus('Thanks for the detailed feedback!', 'success');
+      } catch (err) {
+        console.error('Failed to submit detailed feedback:', err);
+      }
+    }
+
+    // ========== REVIEWS ==========
+
+    function sanitizeText(text) {
+      return String(text || '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    }
+
+    function ensureReviewModal() {
+      let modal = document.getElementById('reviewModal');
+      if (modal) return modal;
+
+      modal = document.createElement('div');
+      modal.id = 'reviewModal';
+      modal.style.position = 'fixed';
+      modal.style.top = '0';
+      modal.style.left = '0';
+      modal.style.width = '100vw';
+      modal.style.height = '100vh';
+      modal.style.background = 'rgba(0,0,0,0.35)';
+      modal.style.display = 'none';
+      modal.style.alignItems = 'center';
+      modal.style.justifyContent = 'center';
+      modal.style.zIndex = '10002';
+      modal.style.pointerEvents = 'none';
+      modal.innerHTML = `
+        <div style="background: white; padding: 18px; border-radius: 10px; max-width: 460px; width: 92vw; box-shadow: 0 8px 30px rgba(0,0,0,0.18); position: relative; pointer-events: all;">
+          <button id="closeReviewModal" style="position: absolute; top: 8px; right: 10px; background: #e74c3c; color: white; border: none; border-radius: 50%; width: 26px; height: 26px; font-size: 16px; cursor: pointer;">&times;</button>
+          <h3 style="margin: 0 0 6px 0; color: #333;">Add a review</h3>
+          <p id="reviewPlaceName" style="margin: 0 0 12px 0; color: #666; font-size: 13px;"></p>
+          <form id="reviewForm">
+            <label style="display: block; font-size: 12px; color: #444; margin-bottom: 4px;">Rating</label>
+            <select id="reviewRating" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; font-size: 13px;">
+              <option value="5">5 - Excellent</option>
+              <option value="4">4 - Good</option>
+              <option value="3">3 - Okay</option>
+              <option value="2">2 - Poor</option>
+              <option value="1">1 - Terrible</option>
+            </select>
+            <label style="display: block; font-size: 12px; color: #444; margin-bottom: 4px;">Comment (optional)</label>
+            <textarea id="reviewComment" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; resize: vertical; margin-bottom: 8px;"></textarea>
+            <div id="reviewError" style="color: #e74c3c; font-size: 12px; min-height: 16px; margin-bottom: 6px;"></div>
+            <div style="display: flex; gap: 8px; margin-top: 6px;">
+              <button type="submit" style="flex: 1; padding: 9px; background: #1abc9c; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Submit</button>
+              <button type="button" id="cancelReviewBtn" style="padding: 9px 12px; background: #ddd; color: #555; border: none; border-radius: 6px; cursor: pointer;">Cancel</button>
+            </div>
+          </form>
+          <div id="recentReviews" style="margin-top: 12px; max-height: 220px; overflow-y: auto;"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      modal.querySelector('#closeReviewModal').onclick = () => {
+        modal.style.display = 'none';
+      };
+      modal.querySelector('#cancelReviewBtn').onclick = () => {
+        modal.style.display = 'none';
+      };
+
+      modal.querySelector('#reviewForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const rating = parseInt(modal.querySelector('#reviewRating').value, 10);
+        const comment = modal.querySelector('#reviewComment').value.trim();
+        const placeId = modal.dataset.placeId;
+        const placeName = modal.dataset.placeName;
+        const category = modal.dataset.category || '';
+        const errorEl = modal.querySelector('#reviewError');
+        if (!rating || rating < 1 || rating > 5) {
+          errorEl.textContent = 'Please select a rating between 1 and 5.';
+          return;
+        }
+        errorEl.textContent = '';
+        await submitReview({ placeId, placeName, category, rating, comment });
+        modal.style.display = 'none';
+
+        const summaryEl = document.querySelector(`.review-summary[data-place-id="${placeId}"]`);
+        if (summaryEl) {
+          loadReviewSummary(placeId, summaryEl);
+        }
+      };
+
+      return modal;
+    }
+
+    async function openReviewModal(place) {
+      const modal = ensureReviewModal();
+      modal.dataset.placeId = place.id;
+      modal.dataset.placeName = place.name;
+      modal.dataset.category = place.category || '';
+      modal.querySelector('#reviewPlaceName').textContent = place.name;
+      modal.querySelector('#reviewRating').value = '5';
+      modal.querySelector('#reviewComment').value = '';
+      modal.querySelector('#reviewError').textContent = '';
+      modal.style.display = 'flex';
+      await populateRecentReviews(place.id);
+    }
+
+    async function populateRecentReviews(placeId) {
+      const modal = document.getElementById('reviewModal');
+      const listEl = modal ? modal.querySelector('#recentReviews') : null;
+      if (!listEl) return;
+
+      listEl.innerHTML = '<p style="margin: 0; color: #666; font-size: 12px;">Loading recent reviews...</p>';
+      try {
+        const response = await fetch(`/api/reviews/${encodeURIComponent(placeId)}`);
+        const data = await response.json();
+        if (!data.success) throw new Error(data.error || 'Failed to load');
+        renderRecentReviews(listEl, data.reviews || []);
+      } catch (err) {
+        console.error('Failed to load reviews:', err);
+        listEl.innerHTML = '<p style="margin: 0; color: #e74c3c; font-size: 12px;">Unable to load reviews.</p>';
+      }
+    }
+
+    function renderRecentReviews(container, reviews) {
+      if (!container) return;
+      if (!reviews || reviews.length === 0) {
+        container.innerHTML = '<p style="margin: 0; color: #666; font-size: 12px;">No reviews yet. Be the first to add one!</p>';
+        return;
+      }
+
+      const items = reviews.slice(0, 3).map(review => {
+        const date = review.createdAt ? new Date(review.createdAt).toLocaleDateString() : '';
+        const comment = sanitizeText(review.comment || 'No comment provided');
+        return `
+          <div style="border: 1px solid #eee; padding: 8px; border-radius: 6px; margin-bottom: 6px;">
+            <div style="font-weight: 600; font-size: 12px; color: #333;">⭐ ${review.rating || '-'} ${date ? '• ' + date : ''}</div>
+            <p style="margin: 4px 0 0 0; font-size: 12px; color: #555;">${comment}</p>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = items;
+    }
+
+    async function submitReview({ placeId, placeName, category, rating, comment }) {
+      try {
+        const response = await fetch('/api/reviews', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: currentUserId,
+            placeId,
+            placeName,
+            category,
+            rating,
+            comment,
+          })
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to save review');
+        }
+
+        showStatus('Thanks for reviewing!', 'success');
+      } catch (err) {
+        console.error('Failed to submit review:', err);
+        showStatus('Could not save review', 'error');
+      }
+    }
+
+    async function loadReviewSummary(placeId, targetEl) {
+      if (!targetEl) return;
+      try {
+        const response = await fetch(`/api/reviews/${encodeURIComponent(placeId)}`);
+        const data = await response.json();
+        if (!data.success) throw new Error(data.error || 'Failed to load');
+
+        const reviews = data.reviews || [];
+        if (!reviews.length) {
+          targetEl.textContent = 'No reviews yet';
+          return;
+        }
+
+        const avg = typeof data.avgRating === 'number' ? Math.round(data.avgRating * 10) / 10 : null;
+        targetEl.textContent = avg !== null
+          ? `⭐ ${avg} (${reviews.length} review${reviews.length === 1 ? '' : 's'})`
+          : `${reviews.length} review${reviews.length === 1 ? '' : 's'}`;
+      } catch (err) {
+        console.error('Failed to load review summary:', err);
+        targetEl.textContent = 'Reviews unavailable';
+      }
+    }
+
+    // Rate suggestion accuracy
+    async function rateSuggestionAccuracy(suggestion, wasHelpful) {
+      try {
+        await fetch('/api/rate-suggestion', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: currentUserId,
+            suggestion: suggestion,
+            wasHelpful: wasHelpful,
+            timestamp: new Date().toISOString()
+          })
+        });
+      } catch (err) {
+        console.error('Failed to rate suggestion:', err);
+      }
+    }
+
+    // Toggle between found and saved places view
+    function toggleView(view) {
+      currentView = view;
+      
+      const foundBtn = document.getElementById('showFoundBtn');
+      const savedBtn = document.getElementById('showSavedBtn');
+      const placesList = document.getElementById('placesList');
+      const savedPlacesList = document.getElementById('savedPlacesList');
+      const foundTitle = document.getElementById('foundTitle');
+      const savedTitle = document.getElementById('savedTitle');
+      
+      if (view === 'found') {
+        foundBtn.style.background = '#667eea';
+        foundBtn.style.color = 'white';
+        savedBtn.style.background = '#ddd';
+        savedBtn.style.color = '#666';
+        placesList.style.display = 'block';
+        savedPlacesList.style.display = 'none';
+        foundTitle.style.display = 'block';
+        savedTitle.style.display = 'none';
+      } else {
+        savedBtn.style.background = '#667eea';
+        savedBtn.style.color = 'white';
+        foundBtn.style.background = '#ddd';
+        foundBtn.style.color = '#666';
+        placesList.style.display = 'none';
+        savedPlacesList.style.display = 'block';
+        foundTitle.style.display = 'none';
+        savedTitle.style.display = 'block';
+        loadSavedPlaces();
+      }
+    }
+
+    // Load and display saved places
+    async function loadSavedPlaces() {
+      try {
+        const response = await fetch(`/api/user-preferences/${currentUserId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          savedPlaces = data.preferences.savedPlaces || [];
+          displaySavedPlaces();
+        }
+      } catch (err) {
+        console.error('Failed to load saved places:', err);
+      }
+    }
+
+    // Display saved places
+    function displaySavedPlaces() {
+      const listEl = document.getElementById('savedPlacesList');
+      listEl.innerHTML = '';
+      
+      if (savedPlaces.length === 0) {
+        listEl.innerHTML = '<p style="text-align: center; color: #999; padding: 20px;">No saved places yet. Save places from search results!</p>';
+        return;
+      }
+      
+      savedPlaces.forEach((place, index) => {
+        const placeItem = document.createElement('div');
+        placeItem.className = 'place-item';
+        
+        placeItem.innerHTML = `
+          <div style="border-left: 3px solid #f39c12; padding-left: 8px;">
+            <h3 style="margin: 0 0 5px 0; color: #333; font-size: 14px;">⭐ ${place.name}</h3>
+            <div style="font-size: 11px; color: #666; line-height: 1.6;">
+              <p style="margin: 3px 0;">🏷️ <b>${place.category}</b> ${place.type ? `• ${place.type}` : ''}</p>
+              <p style="margin: 3px 0; font-size: 10px; color: #999;">Saved: ${new Date(place.savedAt).toLocaleDateString()}</p>
+            </div>
+          </div>
+          <div style="display: flex; gap: 5px; margin-top: 10px;">
+            <button onclick="showRoute({name: '${place.name.replace(/'/g, "\\'")}', latitude: ${place.latitude}, longitude: ${place.longitude}})" style="flex: 1; padding: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">📍 Get Route</button>
+            <button onclick="unsavePlace('${place.id}')" style="padding: 8px 12px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">🗑️</button>
+          </div>
+        `;
+        
+        listEl.appendChild(placeItem);
+      });
+    }
+
+    // ========== MAIN SEARCH FUNCTION ==========
+
+    // Main search function using Nominatim
+    async function searchNearbyPlaces() {
+      try {
+        setLoading(true);
+
+        let location = currentLocation;
+
+        // If no current location, get user's current location
+        if (!location) {
+          showStatus('Getting your location...', 'info');
+          location = await getUserLocation();
+          addUserMarker(location.latitude, location.longitude);
+          document.getElementById('locationDisplay').value =
+            `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`;
+        }
+
+        const searchQuery = document.getElementById('searchQuery').value;
+        const searchRadius = parseFloat(document.getElementById('searchRadius').value);
+        const resultLimit = parseInt(document.getElementById('resultLimit').value);
+
+        if (!searchQuery) {
+          showStatus('Please enter a search query', 'error');
+          setLoading(false);
+          return;
+        }
+
+        // Track search query for suggestions
+        trackSearch(searchQuery);
+
+        console.log(`[CLIENT] Searching for "${searchQuery}" near ${location.latitude},${location.longitude} within ${searchRadius}km`);
+        showStatus('Searching using Nominatim...', 'info');
+
+        // Fetch nearby places using Nominatim
+        const response = await fetch('/api/search-places', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            latitude: location.latitude,
+            longitude: location.longitude,
+            query: searchQuery,
+            limit: resultLimit
+          })
+        });
+
+        const data = await response.json();
+
+        console.log(`[CLIENT] Response:`, data);
+
+        if (!data.success) {
+          showStatus(`Error: ${data.error}`, 'error');
+          setLoading(false);
+          return;
+        }
+
+        // Get all places from server
+        let places = data.places || [];
+        console.log(`[CLIENT] Received ${places.length} places from server`);
+
+        // Apply preference keyword filter immediately (non-destructive fallback to all if empty)
+        const preferenceText = document.getElementById('preferenceFilter').value || '';
+        const prefFiltered = applyPreferenceFilter(places, preferenceText);
+        if (preferenceText && prefFiltered.length > 0) {
+          places = prefFiltered;
+          showStatus(`Preferences applied: showing ${places.length} match(es)`, 'success');
+        } else if (preferenceText && prefFiltered.length === 0) {
+          showStatus('No places matched your preferences; showing all results instead.', 'warning');
+        }
+
+        // Sort places by feedback and saved status
+        try {
+          const sortResponse = await fetch('/api/sort-places-by-feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              places: places,
+              userId: currentUserId
+            })
+          });
+          
+          const sortData = await sortResponse.json();
+          if (sortData.success) {
+            places = sortData.places;
+            console.log(`[CLIENT] Places sorted by feedback`);
+          }
+        } catch (err) {
+          console.error('Failed to sort places by feedback:', err);
+          // Continue with unsorted places if sorting fails
+        }
+
+        // Calculate distance for all places and sort by distance
+        places = places.map(place => {
+          const distance = calculateDistance(
+            location.latitude,
+            location.longitude,
+            place.latitude,
+            place.longitude
+          );
+          return { ...place, distance };
+        });
+
+        // Sort by distance
+        places.sort((a, b) => a.distance - b.distance);
+
+        // Filter by radius for map markers only
+        const withinRadius = places.filter(p => p.distance <= searchRadius);
+        console.log(`[CLIENT] After radius filter: ${withinRadius.length} places (within ${searchRadius}km)`);
+        console.log(`[CLIENT] Total places from server: ${places.length}, Within radius: ${withinRadius.length}`);
+
+        // Clear previous markers
+        clearMarkers();
+
+        // Store filtered places for later use
+        currentPlaces = places;
+
+        // Show all results in transparent modal (both within and outside radius)
+        showAllResultsModal(places, searchRadius, searchQuery);
+
+        if (withinRadius.length === 0) {
+          console.log(`[CLIENT] No places found within ${searchRadius}km radius`);
+          showStatus(`No ${searchQuery} found within ${searchRadius}km. Check modal for all results.`, 'warning');
+          setLoading(false);
+          return;
+        }
+
+        // Add place markers
+        withinRadius.slice(0, resultLimit).forEach((place, index) => {
+          // Add marker to map
+          const marker = L.marker(
+            [place.latitude, place.longitude],
+            { icon: createMarkerIcon(place.category) }
+          ).addTo(map);
+
+          // Create popup
+          const addressStr = place.address ? 
+            Object.entries(place.address).slice(0, 4).map(([k, v]) => `<b>${k}:</b> ${v}`).join('<br>') : 
+            'N/A';
+          
+          let popupContent = `
+            <div style="min-width: 320px; font-size: 12px; font-family: Arial, sans-serif;">
+              <h3 style="margin: 5px 0 10px 0; color: #667eea; font-size: 15px;">📍 ${place.name}</h3>
+              <hr style="margin: 8px 0; border: none; border-top: 1px solid #eee;">
+              
+              <div style="background: #f8f9fa; padding: 8px; border-radius: 4px; margin-bottom: 8px;">
+                <p style="margin: 3px 0;"><b>🏷️ Category:</b> ${place.category || 'Unknown'}</p>
+                <p style="margin: 3px 0;"><b>📋 Type:</b> ${place.type || 'N/A'}</p>
+                <p style="margin: 3px 0;"><b>📏 Distance:</b> ${place.distance.toFixed(2)} km</p>
+                ${place.importance ? `<p style="margin: 3px 0;"><b>⭐ Importance:</b> ${(place.importance * 100).toFixed(1)}%</p>` : ''}
+              </div>
+              
+              <div style="margin-bottom: 8px;">
+                <p style="margin: 3px 0; font-size: 11px;"><b>🌍 Coordinates:</b><br>${place.latitude.toFixed(6)}, ${place.longitude.toFixed(6)}</p>
+                <p style="margin: 3px 0; font-size: 11px;"><b>🗺️ OSM ID:</b> ${place.id} (${place.osmType || 'N/A'})</p>
+              </div>
+              
+              <div style="background: #fff3cd; padding: 6px; border-radius: 4px; font-size: 11px;">
+                <b>📮 Address:</b><br>
+                ${addressStr}
+              </div>
+              
+              <p style="font-size: 10px; color: #999; margin-top: 8px; border-top: 1px solid #eee; padding-top: 6px;">
+                ${place.displayName}
+              </p>
+            </div>
+          `;
+
+          marker.bindPopup(popupContent);
+          placeMarkers.push(marker);
+
+          // Add to places list (we'll organize by category later)
+          place.marker = marker;
+        });
+
+        console.log(`[CLIENT] Added ${withinRadius.length} markers to map`);
+        
+        // Display places organized by category (radius-limited on map for now)
+        displayPlacesByCategory(withinRadius);
+        showStatus(`Found ${withinRadius.length} ${searchQuery} within ${searchRadius}km!`, 'success');
+
+      } catch (error) {
+        console.error('Search error:', error);
+        showStatus(`Error: ${error.message}`, 'error');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    console.log('✅ Nominatim Place Finder loaded successfully!');
+    console.log('💡 Tip: Click on the map to set your location, or use Search to auto-detect');
+  </script>
+</body>
+</html>
