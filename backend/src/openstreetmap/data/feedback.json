@@ -1,0 +1,63 @@
+{
+  "feedback": [
+    {
+      "userId": "default_user",
+      "feedback": [
+        {
+          "placeId": "6005264685",
+          "placeName": "Indian Coffee House",
+          "category": "amenity",
+          "feedbackType": "positive",
+          "timestamp": "2025-12-06T06:24:17.478Z"
+        },
+        {
+          "placeId": "3941230269",
+          "placeName": "Cafe Coffee Day",
+          "category": "amenity",
+          "feedbackType": "positive",
+          "timestamp": "2025-12-06T06:43:27.874Z"
+        },
+        {
+          "placeId": "3941230269",
+          "placeName": "Cafe Coffee Day",
+          "category": "amenity",
+          "feedbackType": "positive",
+          "timestamp": "2025-12-06T06:47:53.240Z"
+        },
+        {
+          "placeId": "6005264685",
+          "placeName": "Indian Coffee House",
+          "category": "amenity",
+          "feedbackType": "positive",
+          "timestamp": "2025-12-06T06:48:02.691Z"
+        },
+        {
+          "placeId": "6005264685",
+          "placeName": "Indian Coffee House",
+          "category": "amenity",
+          "feedbackType": "positive",
+          "timestamp": "2025-12-06T06:48:03.926Z"
+        },
+        {
+          "placeId": "6005264685",
+          "placeName": "Indian Coffee House",
+          "category": "amenity",
+          "feedbackType": "positive",
+          "timestamp": "2025-12-06T06:48:05.012Z"
+        },
+        {
+          "placeId": "6005264685",
+          "placeName": "Indian Coffee House",
+          "category": "amenity",
+          "feedbackType": "positive",
+          "timestamp": "2025-12-06T06:48:07.194Z"
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "lastUpdated": "2025-12-06T06:48:07.191Z",
+    "totalFeedback": 7
+  }
+}

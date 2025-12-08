@@ -1,0 +1,170 @@
+{
+  "users": [
+    {
+      "userId": "default_user",
+      "preferences": {
+        "favoriteCategories": [
+          "amenity"
+        ],
+        "visitedPlaces": [],
+        "savedPlaces": [
+          {
+            "id": "6005264685",
+            "name": "Indian Coffee House",
+            "category": "amenity",
+            "type": "cafe",
+            "latitude": 26.8474755,
+            "longitude": 80.9465305,
+            "savedAt": "2025-12-06T06:43:32.720Z"
+          }
+        ],
+        "searchHistory": [
+          "Cafes",
+          "Cafes",
+          "Cafes",
+          "Cafes",
+          "Cafes",
+          "Cafes",
+          "Cafes",
+          "cafes",
+          "cafes",
+          "Cafes",
+          "Cafes",
+          "Cafes",
+          "Cafes",
+          "Cafes",
+          "Cafes",
+          "Cafes",
+          "Cafes",
+          "Cafes",
+          "Cafes",
+          "Cafes",
+          "Restaurants",
+          "Cafes",
+          "Restaurants",
+          "Restaurants",
+          "Restaurants",
+          "Restaurants",
+          "Restaurants",
+          "Restaurants",
+          "Restaurants",
+          "Restaurants",
+          "Restaurants",
+          "Cafes",
+          "Cafes",
+          "Restaurants",
+          "Cafes",
+          "Schools",
+          "Colleges",
+          "clinics",
+          "Cafes",
+          "Restaurants",
+          "Restaurants",
+          "Restaurants",
+          "Restaurants",
+          "Restaurants",
+          "Restaurants",
+          "Cafes",
+          "Cafes",
+          "Cafes",
+          "Cafes",
+          "Cafes"
+        ],
+        "ratings": [],
+        "feedback": [
+          {
+            "placeId": "3941230269",
+            "placeName": "Cafe Coffee Day",
+            "category": "amenity",
+            "feedbackType": "positive",
+            "timestamp": "2025-12-05T18:39:44.839Z"
+          },
+          {
+            "placeId": "3941230269",
+            "placeName": "Cafe Coffee Day",
+            "category": "amenity",
+            "feedbackType": "negative",
+            "timestamp": "2025-12-05T18:41:25.670Z"
+          },
+          {
+            "placeId": "6005264685",
+            "placeName": "Indian Coffee House",
+            "category": "amenity",
+            "feedbackType": "positive",
+            "timestamp": "2025-12-06T06:24:17.478Z"
+          },
+          {
+            "placeId": "3941230269",
+            "placeName": "Cafe Coffee Day",
+            "category": "amenity",
+            "feedbackType": "positive",
+            "timestamp": "2025-12-06T06:43:27.874Z"
+          },
+          {
+            "placeId": "3941230269",
+            "placeName": "Cafe Coffee Day",
+            "category": "amenity",
+            "feedbackType": "positive",
+            "timestamp": "2025-12-06T06:47:53.240Z"
+          },
+          {
+            "placeId": "6005264685",
+            "placeName": "Indian Coffee House",
+            "category": "amenity",
+            "feedbackType": "positive",
+            "timestamp": "2025-12-06T06:48:02.691Z"
+          },
+          {
+            "placeId": "6005264685",
+            "placeName": "Indian Coffee House",
+            "category": "amenity",
+            "feedbackType": "positive",
+            "timestamp": "2025-12-06T06:48:03.926Z"
+          },
+          {
+            "placeId": "6005264685",
+            "placeName": "Indian Coffee House",
+            "category": "amenity",
+            "feedbackType": "positive",
+            "timestamp": "2025-12-06T06:48:05.012Z"
+          },
+          {
+            "placeId": "6005264685",
+            "placeName": "Indian Coffee House",
+            "category": "amenity",
+            "feedbackType": "positive",
+            "timestamp": "2025-12-06T06:48:07.194Z"
+          }
+        ],
+        "detailedFeedback": [
+          {
+            "placeId": "3941230269",
+            "placeName": "Cafe Coffee Day",
+            "category": "amenity",
+            "reason": "Poor quality",
+            "comment": "",
+            "timestamp": "2025-12-05T18:41:30.153Z"
+          }
+        ],
+        "suggestionRatings": []
+      },
+      "settings": {
+        "preferredRadius": 5,
+        "preferredTransport": "car",
+        "maxResults": 10
+      }
+    }
+  ],
+  "suggestions": {
+    "categoryWeights": {
+      "amenity": 1,
+      "tourism": 1,
+      "shop": 1,
+      "leisure": 1,
+      "restaurant": 1,
+      "cafe": 1,
+      "hotel": 1
+    },
+    "popularPlaces": []
+  }
+}
