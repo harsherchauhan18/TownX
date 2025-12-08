@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 const { Schema, model } = mongoose;
 
 const PlaceSchema = new Schema({
@@ -13,4 +13,4 @@ const PlaceSchema = new Schema({
   embedding: { type: [Number], default: [] } // optional persisted embedding
 }, { timestamps: true });
 
-export default model('Place', PlaceSchema);
+module.exports = model('Place', PlaceSchema);

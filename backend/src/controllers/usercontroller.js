@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { User } from "../models/user.models.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { sendPasswordResetEmail } from "../service/emailService.js";
 
 const sanitizeUser = (userDoc) => {
   if (!userDoc) return null;
@@ -253,5 +254,58 @@ export const updateAvatar = async (req, res) => {
   } catch (error) {
     console.error("updateAvatar error", error);
     return res.status(500).json({ message: "Unable to update avatar", error: error.message });
+  }
+};
+
+// Forgot Password Handler
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    
+    // Find user by email
+    const user = await User.findOne({ email: normalizedEmail });
+
+    if (!user) {
+      // For security, don't reveal if email exists or not
+      return res.status(200).json({
+        message: "If an account with this email exists, a password reset link has been sent",
+      });
+    }
+
+    // Generate a temporary password
+    const temporaryPassword = Math.random().toString(36).slice(-12);
+
+    // Hash and update the password in database
+    const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+    user.password = hashedPassword;
+    await user.save({ validateBeforeSave: false });
+
+    // Send password reset email with temporary password
+    try {
+      await sendPasswordResetEmail(user.email, user.username, temporaryPassword);
+    } catch (emailError) {
+      console.error("Failed to send email:", emailError);
+      return res.status(500).json({
+        message: "Password reset failed. Could not send email. Please try again later.",
+        error: emailError.message,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Password reset email sent successfully",
+      info: "Check your email for your temporary password",
+    });
+  } catch (error) {
+    console.error("forgotPassword error", error);
+    return res.status(500).json({
+      message: "Unable to process password reset",
+      error: error.message,
+    });
   }
 };

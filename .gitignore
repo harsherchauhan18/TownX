@@ -1,0 +1,6 @@
+node_modules 
+.env 
+DATA_FILES.md
+FEEDBACK_SYSTEM.md
+README_JSON_FILES.md
+SUGGESTION_SYSTEM.md

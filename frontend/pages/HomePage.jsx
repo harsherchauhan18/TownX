@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, Zap, Shield, Menu, Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Send, Sparkles, Zap, Shield, Menu, Plus, MapPin } from "lucide-react";
 
 const StrangerThingsHome = () => {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -89,10 +91,19 @@ const StrangerThingsHome = () => {
               setMessages([]);
               setInput("");
             }}
-            className="w-full mb-6 px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-lg flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform shadow-lg shadow-red-600/30"
+            className="w-full mb-3 px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-lg flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform shadow-lg shadow-red-600/30"
           >
             <Plus className="w-5 h-5" />
             New Investigation
+          </button>
+
+          {/* Place Recommender Button */}
+          <button
+            onClick={() => navigate("/recommender")}
+            className="w-full mb-6 px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform shadow-lg shadow-blue-600/30"
+          >
+            <MapPin className="w-5 h-5" />
+            Place Finder
           </button>
 
           {/* Conversations */}

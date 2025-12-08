@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerUser, loginUser, updateAvatar, getCurrentUser, logoutUser } from "../controllers/usercontroller.js";
+import { registerUser, loginUser, updateAvatar, getCurrentUser, logoutUser, forgotPassword } from "../controllers/usercontroller.js";
 import { authenticate } from "../middleware/authMiddleware.js";
 import { uploadSingle } from "../middleware/multer.js";
 
@@ -9,6 +9,7 @@ const router = Router();
 router.post("/register", uploadSingle("avatar"), registerUser);
 router.post("/signup", uploadSingle("avatar"), registerUser); // Alias for register
 router.post("/login", loginUser);
+router.post("/forgot-password", forgotPassword);
 router.get("/current", authenticate, getCurrentUser);
 router.post("/logout", authenticate, logoutUser);
 // User routes

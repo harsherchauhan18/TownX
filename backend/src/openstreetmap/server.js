@@ -8,6 +8,7 @@ const Review = require("./models/review");
 const FeedbackModel = require("./models/feedback");
 const SearchTrend = require("./models/searchTrend");
 const { initializeLLM, getLocationDetails, getLocationRecommendations, filterPlacesWithLLM } = require("./llm-service-commonjs");
+const { processUserQuery } = require("./agent-commonjs");
 const app = express();
 const PORT = 4000;
 
@@ -384,9 +385,24 @@ app.post("/api/save-place", (req, res) => {
       return res.status(500).json({ success: false, error: "Cannot load preferences" });
     }
     
-    const user = data.users.find(u => u.userId === uid);
+    let user = data.users.find(u => u.userId === uid);
     if (!user) {
-      return res.status(404).json({ success: false, error: "User not found" });
+      // Create new user if doesn't exist
+      user = {
+        userId: uid,
+        preferences: {
+          favoriteCategories: [],
+          visitedPlaces: [],
+          savedPlaces: [],
+          searchHistory: [],
+          ratings: [],
+          feedback: [],
+          detailedFeedback: [],
+          suggestionRatings: []
+        },
+        settings: {}
+      };
+      data.users.push(user);
     }
     
     // Add to saved places if not already saved
@@ -796,6 +812,120 @@ app.get("/api/reviews/:placeId", async (req, res) => {
   }
 });
 
+// Send location details via email
+app.post("/api/send-location-email", async (req, res) => {
+  try {
+    const { to, subject, locationName, category, latitude, longitude, distance, reviews } = req.body;
+    
+    if (!to || !locationName) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
+    // Import nodemailer directly (no need for sendmail module)
+    const nodemailer = (await import('nodemailer')).default;
+    const dotenv = (await import('dotenv')).default;
+    
+    // Load environment variables
+    dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+    
+    // Check if email credentials are available
+    if (!process.env.USER_EMAIL || !process.env.USER_PASS) {
+      console.error("❌ Email credentials not configured");
+      return res.status(500).json({ 
+        success: false, 
+        message: "Email service not configured on server" 
+      });
+    }
+
+    // Create email transporter
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.USER_EMAIL,
+        pass: process.env.USER_PASS,
+      },
+    });
+
+    // Compose email content
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 28px;">📍 Location Recommendation</h1>
+        </div>
+        
+        <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+          <h2 style="color: #667eea; margin-top: 0;">${locationName}</h2>
+          
+          <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 8px 0;"><strong>📂 Category:</strong> ${category}</p>
+            <p style="margin: 8px 0;"><strong>🌍 Coordinates:</strong> ${latitude.toFixed(6)}, ${longitude.toFixed(6)}</p>
+            ${distance ? `<p style="margin: 8px 0;"><strong>📏 Distance:</strong> ${distance.toFixed(2)} km</p>` : ''}
+            <p style="margin: 8px 0;">
+              <a href="https://www.google.com/maps?q=${latitude},${longitude}" 
+                 style="color: #667eea; text-decoration: none; font-weight: bold;">
+                🗺️ View on Google Maps
+              </a>
+            </p>
+          </div>
+          
+          ${reviews ? `
+            <div style="margin-top: 20px;">
+              <h3 style="color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px;">⭐ Reviews</h3>
+              <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; white-space: pre-line;">
+                ${reviews}
+              </div>
+            </div>
+          ` : ''}
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #999; font-size: 12px;">
+            <p>Sent via TownX - Your AI Location Assistant</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const emailText = `
+      Location Recommendation: ${locationName}
+      
+      Category: ${category}
+      Coordinates: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}
+      ${distance ? `Distance: ${distance.toFixed(2)} km` : ''}
+      
+      Google Maps: https://www.google.com/maps?q=${latitude},${longitude}
+      
+      ${reviews || ''}
+      
+      ---
+      Sent via TownX - Your AI Location Assistant
+    `;
+
+    // Send email
+    const info = await transporter.sendMail({
+      from: `"TownX Location Assistant" <${process.env.USER_EMAIL}>`,
+      to: to,
+      subject: subject || `Location Recommendation: ${locationName}`,
+      text: emailText,
+      html: emailHtml,
+    });
+
+    console.log("✅ Email sent successfully:", info.messageId);
+    res.json({ 
+      success: true, 
+      message: "Email sent successfully",
+      messageId: info.messageId 
+    });
+
+  } catch (error) {
+    console.error("❌ Error sending email:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || "Failed to send email" 
+    });
+  }
+});
+
 // Submit detailed feedback with reason and comment
 app.post("/api/detailed-feedback", (req, res) => {
   try {
@@ -1196,6 +1326,68 @@ app.post("/api/location-recommendations", async (req, res) => {
     res.json(recommendations);
   } catch (err) {
     console.error("[ERROR] /api/location-recommendations:", err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ========== AGENTIC AI ENDPOINT ==========
+
+// Process user query through agentic AI
+app.post("/api/agent-search", async (req, res) => {
+  try {
+    const { userQuery, latitude, longitude } = req.body;
+
+    if (!userQuery) {
+      return res.status(400).json({ success: false, error: "userQuery is required" });
+    }
+
+    console.log(`[AGENT] Processing query: "${userQuery}"`);
+
+    // Process query through agent
+    const agentResult = await processUserQuery(userQuery);
+
+    if (!agentResult.success) {
+      return res.status(500).json({ success: false, error: agentResult.error });
+    }
+
+    const { locationTypes, searchKeywords, searchRadius, reasoning } = agentResult.data;
+
+    // Return agent result with next steps
+    res.json({
+      success: true,
+      agent: {
+        userQuery,
+        locationTypes,
+        searchKeywords,
+        searchRadius,
+        reasoning,
+      },
+      instructions: {
+        message: `I found you're looking for ${locationTypes.join(", ")}`,
+        action: "open_map_search",
+        searchQuery: searchKeywords.join(" "),
+        mapCenter: latitude && longitude ? { latitude, longitude } : null,
+      },
+    });
+
+    // Track search query for analytics
+    if (searchKeywords.length > 0) {
+      const mainQuery = searchKeywords[0];
+      await new Promise((resolve) => {
+        setTimeout(async () => {
+          try {
+            if (MONGO_URI) {
+              await trackSearchQuery(mainQuery);
+            }
+          } catch (e) {
+            console.warn("[AGENT] Failed to track search:", e.message);
+          }
+          resolve();
+        }, 100);
+      });
+    }
+  } catch (err) {
+    console.error("[ERROR] /api/agent-search:", err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });
