@@ -13,13 +13,16 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const isAuthEndpoint =
-      error.config?.url?.includes("/users/login") ||
-      error.config?.url?.includes("/users/signup") ||
+    const isAuthCheckEndpoint =
       error.config?.url?.includes("/users/current");
+    
+    const isLoginEndpoint =
+      error.config?.url?.includes("/users/login") ||
+      error.config?.url?.includes("/users/signup");
 
-    if (error.response?.status === 401 && !isAuthEndpoint) {
-      // Redirect to login if unauthorized
+    // Don't redirect on 401 for auth check or login attempts
+    if (error.response?.status === 401 && !isAuthCheckEndpoint && !isLoginEndpoint) {
+      // Redirect to login if unauthorized on protected endpoints
       window.location.href = "/login";
     }
     return Promise.reject(error);
@@ -32,6 +35,12 @@ export const checkAuthStatus = async () => {
     const response = await api.get("/users/current");
     return response.data.data.user || null;
   } catch (error) {
+    // Silent fail - user not authenticated, this is normal
+    if (error.response?.status === 401) {
+      console.debug('ℹ️ User not authenticated (expected on first load)');
+    } else if (error.message !== 'Network Error') {
+      console.warn('⚠️ Auth check error:', error.message);
+    }
     return null;
   }
 };
