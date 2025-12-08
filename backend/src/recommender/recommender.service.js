@@ -7,8 +7,8 @@
  * - compute blended score and return topk
  */
 
-import Review from '../models/review.model.js';
-import Place from '../models/place.model.js';
+import Review from '../openstreetmap/models/review.js';
+import Place from '../openstreetmap/models/places.js';
 import embedClient from './embedClient.js';
 import { get, set } from './cache.js';
 import { haversineKm } from '../utils/geo.js'; // if you have this util; else simple implementation below
