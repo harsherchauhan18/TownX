@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+import { Schema, model } from 'mongoose';
 
-const searchTrendSchema = new mongoose.Schema(
+const searchTrendSchema = new Schema(
   {
     query: {
       type: String,
@@ -29,4 +29,4 @@ const searchTrendSchema = new mongoose.Schema(
 // Index for trending queries (sort by count descending, date descending)
 searchTrendSchema.index({ count: -1, lastSearchedAt: -1 });
 
-module.exports = mongoose.model('SearchTrend', searchTrendSchema);
+export default model('SearchTrend', searchTrendSchema);

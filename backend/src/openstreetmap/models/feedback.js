@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+import { Schema, models, model } from 'mongoose';
 
-const feedbackSchema = new mongoose.Schema(
+const feedbackSchema = new Schema(
   {
     userId: { type: String, default: 'default_user' },
     placeId: { type: String, required: true },
@@ -12,4 +12,4 @@ const feedbackSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.models.Feedback || mongoose.model('Feedback', feedbackSchema);
+export default models.Feedback || model('Feedback', feedbackSchema);

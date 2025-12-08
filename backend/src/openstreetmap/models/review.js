@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+import { Schema, models, model } from 'mongoose';
 
-const reviewSchema = new mongoose.Schema(
+const reviewSchema = new Schema(
   {
     userId: { type: String, default: 'anonymous' },
     placeId: { type: String, required: true },
@@ -12,4 +12,4 @@ const reviewSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.models.Review || mongoose.model('Review', reviewSchema);
+export default models.Review || model('Review', reviewSchema);
