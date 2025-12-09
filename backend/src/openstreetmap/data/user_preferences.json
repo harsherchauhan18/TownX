@@ -46,16 +46,6 @@
           }
         ],
         "searchHistory": [
-          "Restaurants",
-          "Restaurants",
-          "Restaurants",
-          "Cafes",
-          "Cafes",
-          "Cafes",
-          "cafe",
-          "cafe",
-          "restaurant",
-          "general",
           "colleges",
           "pizza",
           "park",
@@ -95,7 +85,17 @@
           "cafe",
           "hospital",
           "cafe",
-          "cafe"
+          "cafe",
+          "cafe",
+          "hotel",
+          "cafe",
+          "cafe",
+          "cafe",
+          "cafe",
+          "cafe",
+          "cafe",
+          "cafe",
+          "hotel"
         ],
         "ratings": [],
         "feedback": [
@@ -168,6 +168,20 @@
             "category": "amenity",
             "feedbackType": "positive",
             "timestamp": "2025-12-08T19:08:23.305Z"
+          },
+          {
+            "placeId": "4770795661",
+            "placeName": "jungle canteen",
+            "category": "amenity",
+            "feedbackType": "positive",
+            "timestamp": "2025-12-09T10:01:15.889Z"
+          },
+          {
+            "placeId": "4770795661",
+            "placeName": "jungle canteen",
+            "category": "amenity",
+            "feedbackType": "positive",
+            "timestamp": "2025-12-09T10:01:18.559Z"
           }
         ],
         "detailedFeedback": [
