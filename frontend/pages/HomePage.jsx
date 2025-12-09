@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Send, Sparkles, Zap, Shield, Menu, Plus, MapPin } from "lucide-react";
+import Balatro from "./Balatro";
 
 const StrangerThingsHome = () => {
   const navigate = useNavigate();
@@ -63,16 +64,25 @@ const StrangerThingsHome = () => {
 
   return (
     <div className="flex h-screen bg-black text-white overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-red-600 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-red-700 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+      {/* Balatro Animated Background */}
+      <div className="absolute inset-0 z-0" style={{ opacity: 0.4 }}>
+        <Balatro 
+          color1="#DE443B"
+          color2="#8B0000"
+          color3="#1a0000"
+          spinRotation={-2.0}
+          spinSpeed={5.0}
+          contrast={3.5}
+          lighting={0.3}
+          spinAmount={0.25}
+          isRotate={true}
+          mouseInteraction={true}
+        />
       </div>
 
       {/* Sidebar */}
       <div 
-        className={`relative z-10 bg-gray-900 bg-opacity-80 backdrop-blur-sm border-r border-red-600 border-opacity-20 transition-all duration-300 ${
+        className={`relative z-20 bg-gray-900 bg-opacity-80 backdrop-blur-sm border-r border-red-600 border-opacity-20 transition-all duration-300 ${
           sidebarOpen ? 'w-64' : 'w-0'
         } overflow-hidden`}
       >

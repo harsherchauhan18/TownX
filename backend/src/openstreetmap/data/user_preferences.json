@@ -46,9 +46,6 @@
           }
         ],
         "searchHistory": [
-          "Cafes",
-          "Cafes",
-          "Cafes",
           "Restaurants",
           "Restaurants",
           "Restaurants",
@@ -95,6 +92,9 @@
           "restaurant",
           "restaurant",
           "restaurant",
+          "cafe",
+          "hospital",
+          "cafe",
           "cafe"
         ],
         "ratings": [],

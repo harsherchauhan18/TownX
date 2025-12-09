@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import StrangerMeteorBackground from "./StrangerMeteorBackground";
 
 // AuthForm component moved outside to prevent re-creation on every render
 const AuthForm = ({ type, email, setEmail, password, setPassword, handleSubmit, isLoading }) => (
@@ -91,13 +92,9 @@ const LoginSignup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-red-600 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-red-700 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-      </div>
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Stranger Things Meteor Shower Background */}
+      <StrangerMeteorBackground />
 
       {authMode === "default" ? (
         <div className="relative w-full max-w-md z-10">

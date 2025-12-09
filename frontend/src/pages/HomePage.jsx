@@ -6,6 +6,7 @@ import { getChatResponse } from "../services/llmService";
 import { getUserReviews } from "../services/reviewService";
 import { useAuth } from "../context/AuthContext";
 import ReviewModal from "../components/ReviewModal";
+import StrangerMeteorBackground from "./StrangerMeteorBackground";
 
 const StrangerThingsHome = () => {
   const navigate = useNavigate();
@@ -171,13 +172,9 @@ const StrangerThingsHome = () => {
   };
 
   return (
-    <div className="flex h-screen bg-black text-white overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-red-600 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-red-700 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
-      </div>
+    <div className="flex h-screen text-white overflow-hidden">
+      {/* Stranger Things Meteor Shower Background */}
+      <StrangerMeteorBackground />
 
       {/* Sidebar */}
       <div 
